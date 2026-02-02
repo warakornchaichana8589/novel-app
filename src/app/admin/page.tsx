@@ -334,58 +334,60 @@ export default function AdminPage() {
           </div>
 
           {/* Table */}
-          <Card title="รายการนิยาย">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">ชื่อเรื่อง</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700 w-32">หมวดหมู่</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700 w-28">ยอดวิว</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700 w-32">อัพเดท</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700 w-32">จัดการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stories?.map((story) => (
-                  <tr key={story.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 px-4">
-                      <div className="font-medium">{story.title}</div>
-                      <div className="text-sm text-gray-500">{story.author}</div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <Badge className="bg-purple-100 text-purple-700 border-0">{story.category}</Badge>
-                    </td>
-                    <td className="py-3 px-4">{story.views.toLocaleString()}</td>
-                    <td className="py-3 px-4 text-gray-500">
-                      {new Date(story.updatedAt).toLocaleDateString('th-TH')}
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex gap-2">
-                        <Button
-                          type="text"
-                          size="small"
-                          icon={<Eye className="w-4 h-4" />}
-                          onClick={() => router.push(`/stories/${story.id}`)}
-                        />
-                        <Button
-                          type="text"
-                          size="small"
-                          icon={<Edit className="w-4 h-4" />}
-                          onClick={() => openEditForm(story)}
-                        />
-                        <Button
-                          type="text"
-                          danger
-                          size="small"
-                          icon={<Trash2 className="w-4 h-4" />}
-                          onClick={() => setStoryToDelete(story)}
-                        />
-                      </div>
-                    </td>
+          <Card title="รายการนิยาย" bodyStyle={{ padding: 0 }}>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[700px]">
+                <thead>
+                  <tr className="border-b border-gray-200 bg-gray-50">
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">ชื่อเรื่อง</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 w-28">หมวดหมู่</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 w-24">ยอดวิว</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 w-28">อัพเดท</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 w-28">จัดการ</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {stories?.map((story) => (
+                    <tr key={story.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4">
+                        <div className="font-medium truncate max-w-[200px]">{story.title}</div>
+                        <div className="text-sm text-gray-500">{story.author}</div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <Badge className="bg-purple-100 text-purple-700 border-0">{story.category}</Badge>
+                      </td>
+                      <td className="py-3 px-4">{story.views.toLocaleString()}</td>
+                      <td className="py-3 px-4 text-gray-500 text-sm">
+                        {new Date(story.updatedAt).toLocaleDateString('th-TH')}
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex gap-1">
+                          <Button
+                            type="text"
+                            size="small"
+                            icon={<Eye className="w-4 h-4" />}
+                            onClick={() => router.push(`/stories/${story.id}`)}
+                          />
+                          <Button
+                            type="text"
+                            size="small"
+                            icon={<Edit className="w-4 h-4" />}
+                            onClick={() => openEditForm(story)}
+                          />
+                          <Button
+                            type="text"
+                            danger
+                            size="small"
+                            icon={<Trash2 className="w-4 h-4" />}
+                            onClick={() => setStoryToDelete(story)}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </Card>
         </div>
 
