@@ -5,14 +5,13 @@ import { useRouter } from 'next/navigation';
 import {
   Typography,
   Button,
-  Table,
-  Space,
   Modal,
   message,
   Card,
-  Row,
-  Col,
   Statistic,
+  Badge,
+  Avatar,
+  Dropdown,
 } from 'antd';
 import {
   Plus,
@@ -23,6 +22,8 @@ import {
   BookOpen,
   Users,
   TrendingUp,
+  MoreVertical,
+  ChevronRight,
 } from 'lucide-react';
 import { MainLayout } from '@/components/main-layout';
 import { StoryForm } from '@/components/story-form';
@@ -34,7 +35,111 @@ import {
 } from '@/hooks/use-stories';
 import { Story } from '@/lib/types';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
+
+// Mobile Story Card Component
+function MobileStoryCard({ 
+  story, 
+  onEdit, 
+  onDelete,
+  onView 
+}: { 
+  story: Story; 
+  onEdit: (s: Story) => void;
+  onDelete: (s: Story) => void;
+  onView: (id: string) => void;
+}) {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('th-TH', {
+      day: 'numeric',
+      month: 'short',
+    });
+  };
+
+  const formatViews = (views: number) => {
+    if (views >= 1000000) return `${(views / 1000000).toFixed(1)}M`;
+    if (views >= 1000) return `${(views / 1000).toFixed(1)}k`;
+    return views.toString();
+  };
+
+  const menuItems = [
+    {
+      key: 'view',
+      label: 'ดูหน้านี้',
+      icon: <Eye className="w-4 h-4" />,
+      onClick: () => onView(story.id),
+    },
+    {
+      key: 'edit',
+      label: 'แก้ไข',
+      icon: <Edit className="w-4 h-4" />,
+      onClick: () => onEdit(story),
+    },
+    {
+      key: 'delete',
+      label: 'ลบ',
+      icon: <Trash2 className="w-4 h-4" />,
+      danger: true,
+      onClick: () => onDelete(story),
+    },
+  ];
+
+  return (
+    <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+      <div className="flex gap-3">
+        {/* Cover */}
+        <div 
+          className="w-20 h-28 rounded-lg bg-gradient-to-br from-purple-400 to-pink-400 flex-shrink-0 overflow-hidden"
+          onClick={() => onView(story.id)}
+        >
+          {story.coverImage ? (
+            <img 
+              src={story.coverImage} 
+              alt={story.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <span className="text-white text-2xl font-bold">{story.title[0]}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <h4 className="font-semibold text-gray-900 line-clamp-1">{story.title}</h4>
+              <p className="text-sm text-gray-500">{story.author}</p>
+            </div>
+            <Dropdown menu={{ items: menuItems }} placement="bottomRight">
+              <button className="p-2 hover:bg-gray-100 rounded-full">
+                <MoreVertical className="w-5 h-5 text-gray-400" />
+              </button>
+            </Dropdown>
+          </div>
+
+          <div className="flex items-center gap-2 mt-2">
+            <Badge className="bg-purple-100 text-purple-700 border-0">
+              {story.category}
+            </Badge>
+          </div>
+
+          <div className="flex items-center justify-between mt-3 text-sm text-gray-500">
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-1">
+                <TrendingUp className="w-4 h-4" />
+                {formatViews(story.views)}
+              </span>
+              <span>{formatDate(story.updatedAt)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminPage() {
   const router = useRouter();
@@ -96,100 +201,115 @@ export default function AdminPage() {
     setIsFormOpen(true);
   };
 
-  const columns = [
-    {
-      title: 'ชื่อเรื่อง',
-      dataIndex: 'title',
-      key: 'title',
-      render: (text: string, record: Story) => (
-        <div>
-          <div className="font-medium">{text}</div>
-          <div className="text-sm text-gray-500">{record.author}</div>
-        </div>
-      ),
-    },
-    {
-      title: 'หมวดหมู่',
-      dataIndex: 'category',
-      key: 'category',
-      width: 120,
-    },
-    {
-      title: 'ยอดวิว',
-      dataIndex: 'views',
-      key: 'views',
-      width: 100,
-      sorter: (a: Story, b: Story) => a.views - b.views,
-      render: (views: number) => views.toLocaleString(),
-    },
-    {
-      title: 'อัพเดทล่าสุด',
-      dataIndex: 'updatedAt',
-      key: 'updatedAt',
-      width: 150,
-      render: (date: string) => new Date(date).toLocaleDateString('th-TH'),
-    },
-    {
-      title: 'การจัดการ',
-      key: 'actions',
-      width: 150,
-      render: (_: any, record: Story) => (
-        <Space>
-          <Button
-            type="text"
-            icon={<Eye className="w-4 h-4" />}
-            onClick={() => router.push(`/stories/${record.id}`)}
-          />
-          <Button
-            type="text"
-            icon={<Edit className="w-4 h-4" />}
-            onClick={() => openEditForm(record)}
-          />
-          <Button
-            type="text"
-            danger
-            icon={<Trash2 className="w-4 h-4" />}
-            onClick={() => setStoryToDelete(record)}
-          />
-        </Space>
-      ),
-    },
-  ];
-
   const totalViews = stories?.reduce((acc, s) => acc + s.views, 0) || 0;
+  const uniqueAuthors = new Set(stories?.map(s => s.author)).size || 0;
 
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          <div>
-            <Button
-              type="text"
-              icon={<ArrowLeft className="w-4 h-4" />}
+      <div className="min-h-screen bg-white md:bg-gray-50">
+        {/* Mobile View */}
+        <div className="md:hidden">
+          {/* Header */}
+          <div className="flex items-center gap-4 px-4 py-3 bg-white border-b border-gray-100 sticky top-14 z-30">
+            <button 
               onClick={() => router.push('/')}
-              className="mb-2"
+              className="p-2 -ml-2 hover:bg-gray-100 rounded-full"
             >
-              กลับหน้าหลัก
-            </Button>
-            <Title level={2} className="!text-2xl !mb-0">
-              แดชบอร์ดผู้ดูแล
-            </Title>
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <h1 className="text-lg font-semibold">แดชบอร์ด</h1>
           </div>
-          
-          <Button
-            type="primary"
-            icon={<Plus className="w-4 h-4" />}
-            onClick={openCreateForm}
-            size="large"
-          >
-            เขียนนิยายใหม่
-          </Button>
+
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-3 p-4">
+            <Card className="text-center border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100">
+              <BookOpen className="w-6 h-6 text-blue-600 mx-auto mb-1" />
+              <div className="text-2xl font-bold text-blue-700">{stories?.length || 0}</div>
+              <div className="text-xs text-blue-600">นิยาย</div>
+            </Card>
+            
+            <Card className="text-center border-0 shadow-sm bg-gradient-to-br from-green-50 to-green-100">
+              <TrendingUp className="w-6 h-6 text-green-600 mx-auto mb-1" />
+              <div className="text-2xl font-bold text-green-700">
+                {totalViews >= 1000 ? `${(totalViews/1000).toFixed(1)}k` : totalViews}
+              </div>
+              <div className="text-xs text-green-600">ยอดอ่าน</div>
+            </Card>
+            
+            <Card className="text-center border-0 shadow-sm bg-gradient-to-br from-purple-50 to-purple-100">
+              <Users className="w-6 h-6 text-purple-600 mx-auto mb-1" />
+              <div className="text-2xl font-bold text-purple-700">{uniqueAuthors}</div>
+              <div className="text-xs text-purple-600">ผู้เขียน</div>
+            </Card>
+          </div>
+
+          {/* Story List */}
+          <div className="px-4 pb-24">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold text-gray-800">รายการนิยาย</h2>
+              <Button 
+                type="primary" 
+                size="small"
+                icon={<Plus className="w-4 h-4" />}
+                onClick={openCreateForm}
+                className="bg-gradient-to-r from-purple-600 to-pink-500 border-0 rounded-full"
+              >
+                เพิ่ม
+              </Button>
+            </div>
+
+            {isLoading ? (
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="bg-gray-100 rounded-xl h-32 animate-pulse" />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {stories?.map((story) => (
+                  <MobileStoryCard
+                    key={story.id}
+                    story={story}
+                    onEdit={openEditForm}
+                    onDelete={setStoryToDelete}
+                    onView={(id) => router.push(`/stories/${id}`)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Stats Cards */}
-        <Row gutter={[24, 24]} className="mb-8">
-          <Col xs={24} sm={8}>
+        {/* Desktop View */}
+        <div className="hidden md:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <div>
+              <Button
+                type="text"
+                icon={<ArrowLeft className="w-4 h-4" />}
+                onClick={() => router.push('/')}
+                className="mb-2"
+              >
+                กลับหน้าหลัก
+              </Button>
+              <Title level={2} className="!text-2xl !mb-0">
+                แดชบอร์ดผู้ดูแล
+              </Title>
+            </div>
+            
+            <Button
+              type="primary"
+              icon={<Plus className="w-4 h-4" />}
+              onClick={openCreateForm}
+              size="large"
+            >
+              เขียนนิยายใหม่
+            </Button>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-3 gap-6 mb-8">
             <Card>
               <Statistic
                 title="นิยายทั้งหมด"
@@ -197,8 +317,6 @@ export default function AdminPage() {
                 prefix={<BookOpen className="w-5 h-5 text-blue-500" />}
               />
             </Card>
-          </Col>
-          <Col xs={24} sm={8}>
             <Card>
               <Statistic
                 title="ยอดอ่านรวม"
@@ -206,28 +324,70 @@ export default function AdminPage() {
                 prefix={<TrendingUp className="w-5 h-5 text-green-500" />}
               />
             </Card>
-          </Col>
-          <Col xs={24} sm={8}>
             <Card>
               <Statistic
                 title="ผู้เขียน"
-                value={new Set(stories?.map(s => s.author)).size || 0}
+                value={uniqueAuthors}
                 prefix={<Users className="w-5 h-5 text-purple-500" />}
               />
             </Card>
-          </Col>
-        </Row>
+          </div>
 
-        {/* Stories Table */}
-        <Card title="รายการนิยาย">
-          <Table
-            columns={columns}
-            dataSource={stories}
-            rowKey="id"
-            loading={isLoading}
-            pagination={{ pageSize: 10 }}
-          />
-        </Card>
+          {/* Table */}
+          <Card title="รายการนิยาย">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-3 px-4 font-medium text-gray-700">ชื่อเรื่อง</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-700 w-32">หมวดหมู่</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-700 w-28">ยอดวิว</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-700 w-32">อัพเดท</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-700 w-32">จัดการ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stories?.map((story) => (
+                  <tr key={story.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="py-3 px-4">
+                      <div className="font-medium">{story.title}</div>
+                      <div className="text-sm text-gray-500">{story.author}</div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <Badge className="bg-purple-100 text-purple-700 border-0">{story.category}</Badge>
+                    </td>
+                    <td className="py-3 px-4">{story.views.toLocaleString()}</td>
+                    <td className="py-3 px-4 text-gray-500">
+                      {new Date(story.updatedAt).toLocaleDateString('th-TH')}
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex gap-2">
+                        <Button
+                          type="text"
+                          size="small"
+                          icon={<Eye className="w-4 h-4" />}
+                          onClick={() => router.push(`/stories/${story.id}`)}
+                        />
+                        <Button
+                          type="text"
+                          size="small"
+                          icon={<Edit className="w-4 h-4" />}
+                          onClick={() => openEditForm(story)}
+                        />
+                        <Button
+                          type="text"
+                          danger
+                          size="small"
+                          icon={<Trash2 className="w-4 h-4" />}
+                          onClick={() => setStoryToDelete(story)}
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Card>
+        </div>
 
         {/* Create/Edit Modal */}
         <Modal
@@ -242,6 +402,7 @@ export default function AdminPage() {
           footer={null}
           width={800}
           destroyOnClose
+          className="admin-modal"
         >
           <StoryForm
             story={editingStory}
